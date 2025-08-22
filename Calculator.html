@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows Style Calculator</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Segoe UI, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: #f3f3f3;
+      height: 100vh;
+      padding-top: 20px;
+    }
+    .calculator {
+      background: #ffffff;
+      width: 320px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+    .display {
+      text-align: right;
+      padding: 20px;
+      font-size: 2.5rem;
+      font-weight: 600;
+      background: #f8f8f8;
+      border-bottom: 1px solid #ccc;
+    }
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 4px;
+      padding: 4px;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 15px;
+      border: none;
+      background: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:active {
+      background: #dcdcdc;
+    }
+    .op {
+      background: #e6f0ff;
+    }
+    .eq {
+      background: #0078d7;
+      color: white;
+    }
+    .memory-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-gap: 4px;
+      padding: 4px;
+      background: #fafafa;
+    }
+    .memory-row button {
+      font-size: 0.9rem;
+      padding: 10px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="memory-row">
+      <button data-action="MC">MC</button>
+      <button data-action="MR">MR</button>
+      <button data-action="M+">M+</button>
+      <button data-action="M-">M-</button>
+      <button data-action="MS">MS</button>
+      <button data-action="Mv">M∨</button>
+    </div>
+    <div class="keys">
+      <button data-action="%">%</button>
+      <button data-action="CE">CE</button>
+      <button data-action="C">C</button>
+      <button data-action="back">⌫</button>
+      <button data-action="1/x">1/x</button>
+      <button data-action="x²">x²</button>
+      <button data-action="√x">²√x</button>
+      <button class="op" data-action="/">÷</button>
+      <button data-num>7</button>
+      <button data-num>8</button>
+      <button data-num>9</button>
+      <button class="op" data-action="*">×</button>
+      <button data-num>4</button>
+      <button data-num>5</button>
+      <button data-num>6</button>
+      <button class="op" data-action="-">−</button>
+      <button data-num>1</button>
+      <button data-num>2</button>
+      <button data-num>3</button>
+      <button class="op" data-action="+">+</button>
+      <button data-num>0</button>
+      <button data-action=".">.</button>
+      <button class="eq" data-action="=">=</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    let current = '0';
+    let memory = null;
+    let op = null;
+    let justEvaluated = false;
+
+    function updateDisplay() {
+      display.textContent = current;
+    }
+
+    function inputDigit(d) {
+      if (justEvaluated) { current = d; justEvaluated = false; }
+      else if (current === '0') current = d;
+      else current += d;
+      updateDisplay();
+    }
+
+    function inputDecimal() {
+      if (justEvaluated) { current = '0.'; justEvaluated = false; }
+      else if (!current.includes('.')) current += '.';
+      updateDisplay();
+    }
+
+    function clearAll() { current = '0'; memory = null; op = null; updateDisplay(); }
+    function backspace() {
+      if (justEvaluated) { clearAll(); return; }
+      current = current.length > 1 ? current.slice(0,-1) : '0';
+      updateDisplay();
+    }
+
+    function setOp(newOp) {
+      if (op && !justEvaluated) evaluate();
+      memory = parseFloat(current);
+      op = newOp;
+      justEvaluated = false;
+      current = '0';
+    }
+
+    function evaluate() {
+      if (!op || memory === null) return;
+      const a = memory;
+      const b = parseFloat(current);
+      let res = 0;
+      switch(op) {
+        case '+': res = a + b; break;
+        case '-': res = a - b; break;
+        case '*': res = a * b; break;
+        case '/': res = b === 0 ? NaN : a / b; break;
+      }
+      current = String(res);
+      op = null; memory = null; justEvaluated = true;
+      updateDisplay();
+    }
+
+    document.querySelector('.keys').addEventListener('click', e => {
+      const btn = e.target;
+      const num = btn.getAttribute('data-num');
+      const action = btn.getAttribute('data-action');
+      if (num !== null) inputDigit(btn.textContent.trim());
+      else if (action === '.') inputDecimal();
+      else if (action === 'C' || action === 'CE') clearAll();
+      else if (action === 'back') backspace();
+      else if (['+','-','*','/'].includes(action)) setOp(action);
+      else if (action === '=') evaluate();
+    });
+  </script>
+</body>
+</html>
